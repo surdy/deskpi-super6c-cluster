@@ -1,0 +1,34 @@
+---
+- name: Uninstall agents
+  hosts: workers
+  gather_facts: false
+  become: true
+  tasks:
+    - name: Check if uninstall script exists
+      stat:
+        path: /usr/local/bin/k3s-agent-uninstall.sh
+      register: agent_uninstall_script
+
+    - name: Run agent uninstall script
+      shell: >-
+        /usr/local/bin/k3s-agent-uninstall.sh > ~/k3s_uninstall.sh
+      when: agent_uninstall_script.stat.exists
+
+- name: Uninstall control-plane
+  hosts: control_plane
+  become: true
+  tasks:
+    - name: Check if uninstall script exists
+      stat:
+        path: /usr/local/bin/k3s-uninstall.sh
+      register: uninstall_script
+
+    - name: Run uninstall script
+      shell: >-
+        /usr/local/bin/k3s-uninstall.sh > ~/k3s_uninstall.sh
+      when: uninstall_script.stat.exists
+
+    - name: Cleanup kubeconfig
+      file:
+        state: absent
+        path: "~{{ ansible_user }}/.kube"

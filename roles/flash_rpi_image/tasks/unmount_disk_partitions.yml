@@ -1,0 +1,25 @@
+---
+- name: Get list of mounted partitions 
+  shell: >-
+    set -o pipefail && mount | grep -E "^{{ target_disk }}" | awk '{print $3}'
+  register: mounted_partitions   
+  args:
+    executable: /bin/bash
+  failed_when: false
+  changed_when: mounted_partitions.stdout | length > 0
+
+# Unnecessary but workaround for cleaner Unmount (skipped) output
+- name: Save mounted partition list in a variable 
+  set_fact:
+    mounted_part_on_target : "{{ mounted_partitions.stdout_lines | list }}"     
+  when: mounted_partitions.stdout | length > 0
+
+- name: Unmount partition from target disks
+  mount:
+    path: "{{ item }}" 
+    state: unmounted
+  with_items:
+    "{{ mounted_part_on_target }}" 
+  when: mounted_part_on_target is defined
+
+

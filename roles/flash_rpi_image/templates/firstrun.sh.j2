@@ -1,0 +1,30 @@
+#!/bin/bash
+
+set +e
+
+CURRENT_HOSTNAME=`cat /etc/hostname | tr -d " \t\n\r"`
+echo {{ hostname }} >/etc/hostname
+sed -i "s/127.0.1.1.*$CURRENT_HOSTNAME/127.0.1.1\t{{ hostname }}/g" /etc/hosts
+FIRSTUSER=`getent passwd 1000 | cut -d: -f1`
+FIRSTUSERHOME=`getent passwd 1000 | cut -d: -f6`
+install -o "$FIRSTUSER" -m 700 -d "$FIRSTUSERHOME/.ssh"
+install -o "$FIRSTUSER" -m 600 <(printf "{{ public_ssh_key }}") "$FIRSTUSERHOME/.ssh/authorized_keys"
+echo 'PasswordAuthentication no' >>/etc/ssh/sshd_config
+systemctl enable ssh
+
+rm -f /etc/localtime
+echo "{{ timezone }}" >/etc/timezone
+dpkg-reconfigure -f noninteractive tzdata
+
+cat >/etc/default/keyboard <<'KBEOF'
+XKBMODEL="pc105"
+XKBLAYOUT="us"
+XKBVARIANT=""
+XKBOPTIONS=""
+
+KBEOF
+
+dpkg-reconfigure -f noninteractive keyboard-configuration
+rm -f /boot/firstrun.sh
+sed -i 's| systemd.run.*||g' /boot/cmdline.txt
+exit 0

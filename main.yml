@@ -1,0 +1,124 @@
+---
+- name: Set up cluster nodes
+  hosts: cluster
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Update Distro
+      apt: 
+        upgrade: yes
+        update_cache: yes
+      register: distro_update 
+
+    - name: Enable cgroups
+      replace:
+        path: /boot/cmdline.txt
+        regexp: '^([\w](?!.*\b{{ item }}\b).*)$'
+        replace: '\1 {{ item }}'
+      with_items:
+        - "cgroup_memory=1"
+        - "cgroup_enable=memory"
+      register: enable_cgroup
+
+    - name: Reboot if upgraded or cgroup enabled
+      reboot:
+      when: distro_update.changed or enable_cgroup.changed 
+
+    - name: Flush iptables before switching to iptables-legacy from nftables
+      iptables:
+        flush: true
+      changed_when: false   # iptables flush always returns changed
+    
+    - name: Changing to iptables-legacy
+      alternatives:
+        path: /usr/sbin/iptables-legacy
+        name: iptables
+    
+    - name: Changing to ip6tables-legacy
+      alternatives:
+        path: /usr/sbin/ip6tables-legacy
+        name: ip6tables
+
+        # may not be necessary, revisit
+        # requires gather_facts: true
+        #    - name: Update the /etc/hosts file with node name
+        #      lineinfile:
+        #        path: "/etc/hosts"
+        #        regexp: "127.0.0.1\t{{ hostvars[item]['ansible_hostname']}}"
+        #        line: "{{ hostvars[item].ansible_default_ipv4.address }}\t{{ hostvars[item]['ansible_hostname']}}"
+        #        state: present
+        #        backup: yes
+        #      with_items: "{{groups['cluster']}}"
+
+    - name: Download K3s install script
+      get_url:
+        url: https://get.k3s.io
+        dest: "~/k3s_install.sh"
+        mode: a+x
+
+
+- name: Configure the control plane node
+  hosts: control_plane
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Install K3s on control plane
+      shell: >-
+        ~/k3s_install.sh >> ~/k3s_install.log
+      args:
+        chdir: "~"
+        creates: /var/lib/rancher/k3s/server/node-token
+
+    - name: Get node token
+      command: cat /var/lib/rancher/k3s/server/node-token
+      changed_when: false
+      register: node_token_output
+
+    - name: Set node_token fact
+      set_fact:
+        node_token: "{{ node_token_output.stdout_lines[0] }}"
+
+    - name: Replace https://127.0.0.1:6443 by https://<master-hostname>:6443 in k3s.yml
+      replace:
+        path:  /etc/rancher/k3s/k3s.yaml
+        regexp: 'https://127.0.0.1:6443'
+        replace: "https://{{ groups['control_plane'][0] }}:6443"
+
+    - name: Create directory .kube
+      file:
+        path: "~{{ ansible_user }}/.kube"
+        state: directory
+        owner: "{{ ansible_user }}"
+        mode: "u=rwx,g=rx,o="
+
+    - name: Copy config file to user home directory
+      copy:
+        src: /etc/rancher/k3s/k3s.yaml
+        dest: "~{{ ansible_user }}/.kube/config"
+        remote_src: yes
+        owner: "{{ ansible_user }}"
+        mode: 640
+
+    - name: Copy kubeconfig to local machine 
+      fetch:
+        src: "~{{ ansible_user }}/.kube/config"
+        dest: "{{ lookup('env', 'PWD') }}//k3s.yml"
+        flat: yes
+        mode: 640
+
+- name: Configure the worker nodes
+  hosts: workers
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Install K3s on worker nodes
+      shell: >-
+        K3S_URL=https://"{{ groups['control_plane'][0] }}":6443
+        K3S_TOKEN="{{ hostvars[groups['control_plane'][0]]['node_token'] }}"
+        ~/k3s_install.sh >> ~/k3s_install.log
+      args:
+        chdir: "~"
+        creates: /var/lib/rancher/k3s/agent/kubelet.kubeconfig

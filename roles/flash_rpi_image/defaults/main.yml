@@ -1,0 +1,4 @@
+---
+boot_mount_point: "/media/rpi/boot"
+root_mount_point: "/media/rpi/rootfs"
+

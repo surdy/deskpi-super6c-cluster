@@ -1,0 +1,73 @@
+- name: Get URL for latest Raspberry Pi OS image
+  command:
+    curl -I -Ls -o /dev/null -w %{url_effective} https://downloads.raspberrypi.org/raspios_lite_arm64_latest 
+  register: curl_output
+
+- name: Set variables for image
+  set_fact:
+    image_url: "{{ curl_output.stdout }}"
+    image_path_xz: "/home/{{ ansible_user }}/{{ curl_output.stdout | basename }}"
+    image_path: "/home/{{ ansible_user }}/{{ curl_output.stdout | basename | splitext | first }}"
+  
+- name : Download Raspberry Pi OS Image
+  get_url:
+    url: "{{ image_url }}" 
+    # specify file instead of dir to skip downloading the file if checksum matches  
+    dest: "{{ image_path_xz }}"
+    checksum: sha256:https://downloads.raspberrypi.org/raspios_lite_arm64_latest.sha256
+
+- name : Uncompress the image
+  command:
+    unxz -k -f "{{ image_path_xz }}"
+
+- name: Unmount disk before flashing
+  include_tasks:
+    file: unmount_disk_partitions.yml
+
+- name : Flash the image
+  command: 
+    dd if="{{ image_path }}" of={{ target_disk }} status=progress
+  notify: "Delete uncompressed img file"
+
+- name: Get disk partition names
+  shell: >-
+    set -o pipefail && lsblk -p -l -n  {{ target_disk }} | grep part | awk '{print $1}'
+  register: disk_partitions   
+  args:
+    executable: /bin/bash
+  failed_when: false
+  changed_when: disk_partitions.stdout | length > 0
+
+- name: Mount boot partition
+  mount:
+    path: "{{ boot_mount_point }}" 
+    src: "{{ disk_partitions.stdout_lines[0] }}"
+    fstype: vfat
+    fstab: /tmp/tmp.fstab
+    state: mounted
+
+- name: Mount root partition
+  mount:
+    path: "{{ root_mount_point }}" 
+    src: "{{ disk_partitions.stdout_lines[1] }}"
+    fstype: ext4
+    fstab: /tmp/tmp.fstab
+    state: mounted
+
+- name: Generate firstrun.sh based on user defined variables
+  template:
+    src: firstrun.sh.j2 
+    dest: "{{ boot_mount_point }}/firstrun.sh" 
+    mode: 0755
+
+- name: Edit cmdline.txt to launch firstrun
+  lineinfile:
+    path: "{{ boot_mount_point }}/cmdline.txt"
+    regexp: "^(.*)$"
+    line: '\1 systemd.run=/boot/firstrun.sh systemd.run_success_action=reboot systemd.unit=kernel-command-line.target'
+    backrefs: true
+
+- name: Unmount disk after flashing
+  include_tasks:
+    file: unmount_disk_partitions.yml
+

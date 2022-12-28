@@ -1,0 +1,24 @@
+---
+- hosts: cluster
+  gather_facts: false
+  become: yes
+  tasks:
+    - name: Change boot order to SD card first
+      include_role:
+        name: change_boot_order
+      vars:
+        boot_order: "0xf25641"
+
+    - name: Flash RPi OS image to NVME
+      include_role:
+        name: flash_rpi_image
+      vars:
+        target_disk: /dev/nvme0n1
+        hostname: "{{ inventory_hostname }}" 
+
+    - name: Change boot order to NVME card first
+      include_role:
+        name: change_boot_order
+      vars:
+        boot_order: "0xf25146"
+

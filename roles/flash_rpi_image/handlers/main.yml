@@ -1,0 +1,11 @@
+- name: Delete uncompressed img file
+  file:
+    path: "{{ image_path }}"
+    state: absent
+
+- name: Unmount partitions
+  mount:
+    path: "{{ item }}" 
+    state: unmounted
+  with_items:
+    "{{ mounted_partitions.stdout_lines | list }}" 

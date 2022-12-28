@@ -1,0 +1,30 @@
+- name: Dump Bootloader config to a file
+  shell: "rpi-eeprom-config >/tmp/bootloader.cfg"
+
+- name: Fail if write protection is enabled for bootloader
+  lineinfile:
+    path: "/tmp/bootloader.cfg"
+    line: "ENABLE_SELF_UPDATE=1" 
+  check_mode: yes
+  register: bootconf
+  failed_when: bootconf.changed
+
+- name: Enable CM4 EEPROM UPDATE
+  lineinfile:
+    path: "/etc/default/rpi-eeprom-update"
+    line: "CM4_ENABLE_RPI_EEPROM_UPDATE=1"
+
+- name: Edit boot order to {{ boot_order }}
+  lineinfile:
+    path: "/tmp/bootloader.cfg"
+    regex: '^BOOT_ORDER='
+    line: 'BOOT_ORDER={{ boot_order }}'
+  register: last_boot_order 
+
+- name: Update bootloader config to BOOT_ORDER={{ boot_order }} 
+  shell: "rpi-eeprom-config --apply /tmp/bootloader.cfg"
+  when: last_boot_order.changed
+
+- name: Reboot node
+  reboot:
+  when: reboot == true
