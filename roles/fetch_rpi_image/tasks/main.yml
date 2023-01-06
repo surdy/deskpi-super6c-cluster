@@ -1,0 +1,26 @@
+- name: Get URL for latest Raspberry Pi OS image
+  command:
+    curl -I -Ls -o /dev/null -w %{url_effective} "{{ image_url }}"
+  register: curl_output
+
+- name: Set variables for image
+  set_fact:
+    image_url: "{{ curl_output.stdout }}"
+    compressed_image_path: "{{ image_download_path }}/{{ curl_output.stdout | basename }}"
+    uncompressed_image_path: "{{ image_download_path }}/{{ curl_output.stdout | basename | splitext | first }}"
+  
+- name : Make sure the download path exists
+  file:
+    path: "{{ image_download_path }}"
+    state: directory
+
+- name : Download Raspberry Pi OS Image
+  get_url:
+    url: "{{ image_url }}" 
+    # specify file instead of dir to skip downloading the file if checksum matches  
+    dest: "{{ compressed_image_path }}"
+    checksum: sha256:https://downloads.raspberrypi.org/raspios_lite_arm64_latest.sha256
+
+- name : Uncompress the image
+  command:
+    unxz -k -f "{{ compressed_image_path }}"

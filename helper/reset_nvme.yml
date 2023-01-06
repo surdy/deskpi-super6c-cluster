@@ -9,10 +9,15 @@
       vars:
         boot_order: "0xf25641"
 
+    - name: Fetch RPi OS image
+      include_role:
+        name: fetch_rpi_image
+
     - name: Flash RPi OS image to NVME
       include_role:
         name: flash_rpi_image
       vars:
+        image_path: "{{ uncompressed_image_path }}"
         target_disk: /dev/nvme0n1
         hostname: "{{ inventory_hostname }}" 
 

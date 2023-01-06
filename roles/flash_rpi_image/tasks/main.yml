@@ -1,25 +1,3 @@
-- name: Get URL for latest Raspberry Pi OS image
-  command:
-    curl -I -Ls -o /dev/null -w %{url_effective} https://downloads.raspberrypi.org/raspios_lite_arm64_latest 
-  register: curl_output
-
-- name: Set variables for image
-  set_fact:
-    image_url: "{{ curl_output.stdout }}"
-    image_path_xz: "/home/{{ ansible_user }}/{{ curl_output.stdout | basename }}"
-    image_path: "/home/{{ ansible_user }}/{{ curl_output.stdout | basename | splitext | first }}"
-  
-- name : Download Raspberry Pi OS Image
-  get_url:
-    url: "{{ image_url }}" 
-    # specify file instead of dir to skip downloading the file if checksum matches  
-    dest: "{{ image_path_xz }}"
-    checksum: sha256:https://downloads.raspberrypi.org/raspios_lite_arm64_latest.sha256
-
-- name : Uncompress the image
-  command:
-    unxz -k -f "{{ image_path_xz }}"
-
 - name: Unmount disk before flashing
   include_tasks:
     file: unmount_disk_partitions.yml
@@ -70,4 +48,3 @@
 - name: Unmount disk after flashing
   include_tasks:
     file: unmount_disk_partitions.yml
-
