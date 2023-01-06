@@ -1,4 +1,0 @@
-- name: Delete uncompressed img file
-  file:
-    path: "{{ image_path }}"
-    state: absent
