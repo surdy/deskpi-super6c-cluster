@@ -1,2 +1,2 @@
 image_url: https://downloads.raspberrypi.org/raspios_lite_arm64_latest
-image_download_path: /opt/rpi 
+image_download_dir: /opt/rpi 

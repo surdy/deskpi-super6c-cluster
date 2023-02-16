@@ -2,6 +2,7 @@
 - hosts: cluster
   gather_facts: false
   become: yes
+
   tasks:
     - name: Change boot order to SD card first
       include_role:
@@ -11,13 +12,27 @@
 
     - name: Fetch RPi OS image
       include_role:
-        name: fetch_rpi_image
+        name: fetch_rpi_image  # returns downloaded_image_path
+        apply:
+          delegate_to: localhost
+          become: false
+      vars:
+        image_download_dir: /tmp
+
+    - name: Copy image file to node
+      copy:
+        src: "{{ downloaded_image_path }}"
+        dest: /tmp
+
+    - name: Uncompress image file
+      command:
+        unxz -k -f "/tmp/{{ downloaded_image_path | basename }}"
 
     - name: Flash RPi OS image to NVME
       include_role:
         name: flash_rpi_image
       vars:
-        image_path: "{{ uncompressed_image_path }}"
+        image_path: "/tmp/{{ downloaded_image_path | basename | splitext | first }}"
         target_disk: /dev/nvme0n1
         hostname: "{{ inventory_hostname }}" 
 
