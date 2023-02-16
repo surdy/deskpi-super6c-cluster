@@ -3,6 +3,9 @@
   gather_facts: false
   become: yes
 
+  vars:
+    fetch_image_locally: false
+
   tasks:
     - name: Change boot order to SD card first
       include_role:
@@ -14,7 +17,7 @@
       include_role:
         name: fetch_rpi_image  # returns downloaded_image_path
         apply:
-          delegate_to: localhost
+          delegate_to:  "{{ fetch_image_locally | ternary('localhost', inventory_hostname) }}"
           become: false
       vars:
         image_download_dir: /tmp
@@ -23,6 +26,7 @@
       copy:
         src: "{{ downloaded_image_path }}"
         dest: /tmp
+      when: fetch_image_locally == true
 
     - name: Uncompress image file
       command:
@@ -41,4 +45,3 @@
         name: change_boot_order
       vars:
         boot_order: "0xf25146"
-
