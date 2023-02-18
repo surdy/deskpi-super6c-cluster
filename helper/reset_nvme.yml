@@ -9,13 +9,13 @@
   tasks:
     - name: Change boot order to SD card first
       include_role:
-        name: change_boot_order
+        name: rpi/change_boot_order
       vars:
         boot_order: "0xf25641"
 
     - name: Fetch RPi OS image
       include_role:
-        name: fetch_rpi_image  # returns downloaded_image_path
+        name: rpi/fetch_os_image  # returns downloaded_image_path
         apply:
           delegate_to:  "{{ fetch_image_locally | ternary('localhost', inventory_hostname) }}"
           become: false
@@ -34,7 +34,7 @@
 
     - name: Flash RPi OS image to NVME
       include_role:
-        name: flash_rpi_image
+        name: rpi/flash_os_image
       vars:
         image_path: "/tmp/{{ downloaded_image_path | basename | splitext | first }}"
         target_disk: /dev/nvme0n1
@@ -42,6 +42,6 @@
 
     - name: Change boot order to NVME card first
       include_role:
-        name: change_boot_order
+        name: rpi/change_boot_order
       vars:
         boot_order: "0xf25146"
