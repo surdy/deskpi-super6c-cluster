@@ -1,0 +1,43 @@
+- name: Install K3s on control plane
+  shell: >-
+    ~/k3s_install.sh >> ~/k3s_install.log
+  args:
+    chdir: "~"
+    creates: /var/lib/rancher/k3s/server/node-token
+
+- name: Get node token
+  command: cat /var/lib/rancher/k3s/server/node-token
+  changed_when: false
+  register: node_token_output
+
+- name: Set node_token fact
+  set_fact:
+    node_token: "{{ node_token_output.stdout_lines[0] }}"
+
+- name: Replace https://127.0.0.1:6443 by https://<master-hostname>:6443 in k3s.yml
+  replace:
+    path:  /etc/rancher/k3s/k3s.yaml
+    regexp: 'https://127.0.0.1:6443'
+    replace: "https://{{ groups['k3s_server'][0] }}:6443"
+
+- name: Create directory .kube
+  file:
+    path: "~{{ ansible_user }}/.kube"
+    state: directory
+    owner: "{{ ansible_user }}"
+    mode: "u=rwx,g=rx,o="
+
+- name: Copy config file to user home directory
+  copy:
+    src: /etc/rancher/k3s/k3s.yaml
+    dest: "~{{ ansible_user }}/.kube/config"
+    remote_src: yes
+    owner: "{{ ansible_user }}"
+    mode: 640
+
+- name: Copy kubeconfig to local machine 
+  fetch:
+    src: "~{{ ansible_user }}/.kube/config"
+    dest: "{{ lookup('env', 'PWD') }}//k3s.yml"
+    flat: yes
+    mode: 640
