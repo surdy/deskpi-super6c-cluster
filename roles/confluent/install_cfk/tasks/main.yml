@@ -1,0 +1,16 @@
+- name: Add CFK Helm Repo
+  kubernetes.core.helm_repository:
+    repo_name: "{{ confluent_helm_repo_name }}"
+    repo_url: "{{ confluent_helm_repo_url }}"
+
+- name: Get chart version for CFK version
+  script: ./get_chart_version.sh "{{ cfk_version }}"
+  register: chart_version
+
+- name: Install CFK
+  kubernetes.core.helm:
+    name: "{{ cfk_release_name }}"
+    chart_ref: "{{ cfk_chart_ref }}"
+    chart_version: "{{ chart_version.stdout }}"
+    release_namespace: "{{ cfk_namespace }}"
+    create_namespace: true

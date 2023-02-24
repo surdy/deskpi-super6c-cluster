@@ -1,0 +1,5 @@
+---
+cfk_version: "" 
+cfk_namespace: "confluent"
+cfk_release_name: "confluent-o"
+confluent_helm_repo_name: "confluentinc"

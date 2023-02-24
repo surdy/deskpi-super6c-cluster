@@ -1,0 +1,3 @@
+---
+confluent_helm_repo_url: "https://packages.confluent.io/helm"
+cfk_chart_ref: "confluentinc/confluent-for-kubernetes"

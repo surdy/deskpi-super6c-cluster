@@ -1,0 +1,10 @@
+---
+- hosts: localhost
+  connection: local
+  tasks:
+    - name: Install CFK
+      include_role:
+        name: confluent/install_cfk
+      vars:
+        cfk_version: 2.5.1 
+        cfk_namespace: cfk-test
