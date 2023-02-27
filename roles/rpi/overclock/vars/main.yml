@@ -1,0 +1,4 @@
+---
+arm_freq: 2000
+use_performance_scaling: true
+reboot: true

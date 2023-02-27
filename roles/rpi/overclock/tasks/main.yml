@@ -1,0 +1,21 @@
+---
+- name: Overclock the CPU
+  lineinfile:
+    dest: /boot/config.txt
+    regexp: "^#?arm_freq"
+    line: "arm_freq={{ arm_freq }}"
+    state: present
+
+- name: Install cpufrequtils
+  package:
+    name: cpufrequtils
+    state: latest
+  when: use_performance_scaling == true
+
+- name: Set CPU governor to performance
+  shell: "cpufreq-set -g performance"
+  when: use_performance_scaling == true
+
+- name: Reboot Pi
+  reboot:
+  when: reboot == true

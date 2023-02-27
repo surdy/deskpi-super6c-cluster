@@ -1,0 +1,8 @@
+---
+- hosts: node6
+  gather_facts: false
+  become: true
+  tasks:
+    - name: Overclock RPI
+      include_role:
+        name: rpi/overclock
