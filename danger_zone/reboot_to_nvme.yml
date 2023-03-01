@@ -7,7 +7,7 @@
     ansible_user: pi
 
   tasks:
-    - name: Change boot order to sd card first
+    - name: Change boot order to nvme first
       include_role:
         name: rpi/change_boot_order
       vars:
