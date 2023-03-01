@@ -5,7 +5,7 @@
   tasks:
     - name: Preinstall cluster nodes setup
       include_role:
-        name: k3s/preinstall
+        name: rpi/k3s_preinstall
 
 - hosts: k3s_server
   gather_facts: false
