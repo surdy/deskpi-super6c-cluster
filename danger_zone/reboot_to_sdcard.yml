@@ -11,6 +11,6 @@
       include_role:
         name: rpi/change_boot_order
       vars:
-        boot_order: "0xf25641"
+        boot_from: sdcard
         reboot: true
 #ansible-playbook reboot_to_sdcard.yml -i node4,

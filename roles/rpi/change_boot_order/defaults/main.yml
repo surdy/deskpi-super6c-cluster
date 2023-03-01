@@ -1,0 +1,9 @@
+---
+boot_string:
+  sdcard: "0xf25641"
+  network: "0xf56412"
+  usb-msd: "0xf25614"
+  bcm-usb-msd: "0xf26415"
+  nvme: "0xf25416"
+
+default_boot_order: "0xf25641"

@@ -11,6 +11,6 @@
       include_role:
         name: rpi/change_boot_order
       vars:
-        boot_order: "0xf25146"
+        boot_from: nvme
         reboot: true
 #ansible-playbook reboot_to_nvme.yml -i node4,

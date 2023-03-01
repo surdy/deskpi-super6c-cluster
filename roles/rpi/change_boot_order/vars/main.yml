@@ -1,2 +1,4 @@
 ---
 reboot: true
+  #boot_order: "0xf25641"
+  #boot_from: "nvme"
