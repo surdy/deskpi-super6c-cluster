@@ -44,4 +44,4 @@
       include_role:
         name: rpi/change_boot_order
       vars:
-        boot_order: nvme
+        boot_from: nvme
