@@ -1,0 +1,4 @@
+---
+install_on: nvme
+update_distro: false
+

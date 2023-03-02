@@ -3,6 +3,17 @@
   gather_facts: false
   become: true
   tasks:
+    - name: Boot to correct device if needed
+      include_role:
+        name: rpi/change_boot_order
+      vars:
+        boot_from: "{{ install_on }}"
+      when: boot_from is defined
+
+- hosts: cluster
+  gather_facts: false
+  become: true
+  tasks:
     - name: Preinstall cluster nodes setup
       include_role:
         name: rpi/k3s_preinstall
