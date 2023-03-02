@@ -7,3 +7,10 @@ boot_string:
   nvme: "0xf25416"
 
 default_boot_order: "0xf25641"
+
+boot_mode:
+  1: sdcard
+  2: network
+  4: usb-msd
+  5: bcm-usb-msd
+  6: nvme
