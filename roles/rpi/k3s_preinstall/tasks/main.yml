@@ -44,11 +44,3 @@
     #        state: present
     #        backup: yes
     #      with_items: "{{groups['cluster']}}"
-
-- name: Download K3s install script
-  get_url:
-    url: https://get.k3s.io
-    dest: "~/k3s_install.sh"
-    mode: a+x
-
-

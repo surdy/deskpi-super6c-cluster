@@ -21,15 +21,13 @@
 - hosts: k3s_server
   gather_facts: false
   become: true
-  tasks:
-    - name: Configure the control plane node
-      include_role:
-        name: k3s/server
+  roles:
+    - k3s/common
+    - k3s/server
 
 - hosts: k3s_agent
   gather_facts: false
   become: true
-  tasks:
-    - name: Configure the worker nodes
-      include_role:
-        name: k3s/agent
+  roles:
+    - k3s/common
+    - k3s/agent
