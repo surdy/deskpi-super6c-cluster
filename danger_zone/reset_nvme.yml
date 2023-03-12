@@ -1,10 +1,11 @@
 ---
-- hosts: cluster
+- hosts: all
   gather_facts: false
   become: yes
 
   vars:
     fetch_image_locally: false
+    ansible_user: pi
 
   tasks:
     - name: Change boot order to SD card first
