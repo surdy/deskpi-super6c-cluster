@@ -1,0 +1,36 @@
+---
+
+k3s_server:
+  hosts:
+    node1:
+      ansible_host:
+        192.168.1.184
+
+k3s_agent:
+  hosts:
+    node2:
+      ansible_host:
+        192.168.1.179
+    node3:
+      ansible_host:
+        192.168.1.174
+    node4:
+      ansible_host:
+        192.168.1.161
+    node5:
+      ansible_host:
+        192.168.1.163
+    node6:
+      ansible_host:
+        192.168.1.167
+
+cluster:
+  children:
+    k3s_server:
+    k3s_agent:
+
+all:
+  vars:
+    ansible_user: pi
+    install_on: nvme
+    update_distro: false

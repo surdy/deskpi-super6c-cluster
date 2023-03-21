@@ -32,3 +32,5 @@ cluster:
 all:
   vars:
     ansible_user: pi
+    install_on: sdcard
+    update_distro: false
