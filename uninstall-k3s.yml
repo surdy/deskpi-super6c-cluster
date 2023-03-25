@@ -1,6 +1,6 @@
 ---
 - name: Uninstall agents
-  hosts: workers
+  hosts: k3s_agent
   gather_facts: false
   become: true
   tasks:
@@ -15,7 +15,7 @@
       when: agent_uninstall_script.stat.exists
 
 - name: Uninstall control-plane
-  hosts: control_plane
+  hosts: k3s_server
   become: true
   tasks:
     - name: Check if uninstall script exists
