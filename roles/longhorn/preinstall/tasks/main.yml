@@ -1,0 +1,39 @@
+---
+- name: Install prereq packages
+  package:
+    name:
+      - nfs-common
+      - open-iscsi
+      - util-linux
+    state: latest
+
+- name: Get mount points for partitions from target disk
+  shell: >- 
+    set -o pipefail && lsblk -p -l -n  {{ longhorn_data_disk }} | awk '{if ($7) print $7}'
+  register: mount_points
+  args:
+    executable: /bin/bash
+  failed_when: false
+  changed_when: mount_points.stdout | length > 0
+
+- name: Unmount mounted partitions on disk
+  mount:
+    path: "{{ item }}"
+    state: unmounted
+  loop: "{{ mount_points.stdout_lines | list }}"
+
+- name: Wipe target disk
+  shell: "wipefs -af {{ longhorn_data_disk }}"
+
+- name: Format target disk 
+  filesystem:
+    fstype: ext4
+    dev: "{{ longhorn_data_disk }}"
+
+- name: Mount target disk 
+  mount:
+    path: "{{ longhorn_data_path }}"
+    src: "{{ longhorn_data_disk }}"
+    fstype: ext4 
+    opts: nofail
+    state: mounted

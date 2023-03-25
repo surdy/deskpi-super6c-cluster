@@ -1,0 +1,14 @@
+---
+- hosts: cluster
+  gather_facts: false
+  become: true
+  roles:
+    - longhorn/common
+    - longhorn/preinstall
+
+- hosts: localhost
+  connection: local
+  gather_facts: false
+  roles:
+    - longhorn/common
+    - longhorn/install

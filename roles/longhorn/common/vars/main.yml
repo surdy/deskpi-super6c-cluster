@@ -1,0 +1,7 @@
+---
+longhorn_data_disk: /dev/nvme0n1
+
+# install latest if not specified 
+#longhorn_version: 
+
+longhorn_release_name: longhorn
