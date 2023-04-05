@@ -13,3 +13,5 @@
     values:
       defaultSettings:
         defaultDataPath: "{{ longhorn_data_path }}"
+      persistence:
+        reclaimPolicy: "{{ longhorn_reclaim_policy | default('Delete') }}"
