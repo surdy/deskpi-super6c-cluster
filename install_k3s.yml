@@ -22,12 +22,10 @@
   gather_facts: false
   become: true
   roles:
-    - k3s/common
     - k3s/server
 
 - hosts: k3s_agent
   gather_facts: false
   become: true
   roles:
-    - k3s/common
     - k3s/agent
