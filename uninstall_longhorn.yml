@@ -3,5 +3,4 @@
   connection: local
   gather_facts: false
   roles:
-    - longhorn/common
     - longhorn/uninstall
